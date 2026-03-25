@@ -194,12 +194,35 @@
     }
 
     function shortenStudentName(value) {
-      const name = String(value || '').trim();
+      const name = String(value || '')
+        .trim()
+        .replace(/\s*-\s*/g, '-')
+        .replace(/\s+/g, ' ');
       if (!name) return '';
+
       const parts = name.split(/\s+/).filter(Boolean);
       if (parts.length === 1) return parts[0];
-      const surname = parts[0];
-      const initial = parts[1]?.[0] ? parts[1][0].toUpperCase() : '';
+
+      let surname = '';
+      let givenName = '';
+
+      // "Příjmení-Příjmení Jméno ..."
+      if (parts[0].includes('-') && !parts[parts.length - 1].includes('-')) {
+        surname = parts[0];
+        givenName = parts[1] || '';
+      }
+      // "Jméno ... Příjmení-Příjmení"
+      else if (!parts[0].includes('-') && parts[parts.length - 1].includes('-')) {
+        surname = parts[parts.length - 1];
+        givenName = parts[0] || '';
+      }
+      // výchozí tvar používaný ve vstupu: "Příjmení Jméno ..."
+      else {
+        surname = parts[0];
+        givenName = parts[1] || '';
+      }
+
+      const initial = givenName ? givenName[0].toUpperCase() : '';
       return initial ? `${surname} ${initial}.` : surname;
     }
 
@@ -256,7 +279,6 @@
       return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;
     }
 
-    
     function formatDatePretty(value) {
       const d = (value instanceof Date) ? value : new Date(toSortableDate(value));
       if (isNaN(d)) return displayValue(value);
@@ -264,7 +286,8 @@
       const months = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
       return `${days[d.getDay()]} ${d.getDate()}. ${months[d.getMonth()]}`;
     }
-function formatDateLabel(value) {
+
+    function formatDateLabel(value) {
       if (value instanceof Date && !isNaN(value)) {
         return `${String(value.getDate()).padStart(2, '0')}. ${String(value.getMonth() + 1).padStart(2, '0')}. ${value.getFullYear()}`;
       }
@@ -415,12 +438,12 @@ function formatDateLabel(value) {
           }
         });
         for (let c = 1; c <= totalCols; c++) {
-            const cell = dateRow.getCell(c);
-            cell.font = { bold: true };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF2CC' } };
-            cell.alignment = { horizontal: 'center', vertical: 'middle' };
-            setBorder(cell);
-          }
+          const cell = dateRow.getCell(c);
+          cell.font = { bold: true, color: { argb: 'FF000000' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF2CC' } };
+          cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          setBorder(cell);
+        }
         dateRow.height = 20;
 
         const maxLen = Math.max(...rowsByClass.map(arr => arr.length));
